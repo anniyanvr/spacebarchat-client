@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="CargoProjects">
+    <cargoProject FILE="$PROJECT_DIR$/Cargo.toml" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="0756a13d-f814-41e0-81ae-eb872c2c747f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../pnpm-lock.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/../pnpm-lock.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/compiler.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/deploymentTargetDropDown.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/discord.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/gradle.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/kotlinc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/migrations.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/misc.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/.idea/vcs.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/buildSrc/build.gradle.kts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/buildSrc/src/main/java/chat/spacebar/app/kotlin/BuildTask.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gen/android/buildSrc/src/main/java/chat/spacebar/app/kotlin/RustPlugin.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../src/App.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/components/ChannelSidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../src/components/ChannelSidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/components/GuildSidebar.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../src/components/GuildSidebar.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/components/messaging/Chat.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../src/components/messaging/Chat.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/components/modals/JoinServerModal.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../src/components/modals/JoinServerModal.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../src/controllers/modals/ModalController.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/../src/controllers/modals/ModalController.tsx" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="MacroExpansionManager">
+    <option name="directoryName" value="dm7tjlct" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2d1XCyoDrz9y2JsvssmYsjETVjR" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.cidr.known.project.marker": "true",
+    "RunOnceActivity.rust.reset.selective.auto.import": "true",
+    "cf.first.check.clang-format": "false",
+    "cidr.known.project.marker": "true",
+    "git-widget-placeholder": "dev",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "E:/client-react/src-tauri",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "org.rust.cargo.project.model.PROJECT_DISCOVERY": "true",
+    "org.rust.cargo.project.model.impl.CargoExternalSystemProjectAware.subscribe.first.balloon": "",
+    "settings.editor.selected.configurable": "discord-project",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="RustProjectSettings">
+    <option name="toolchainHomeDirectory" value="D:/cache/.cargo/bin" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="0756a13d-f814-41e0-81ae-eb872c2c747f" name="Changes" comment="" />
+      <created>1709176435458</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1709176435458</updated>
+      <workItem from="1709176436794" duration="84000" />
+      <workItem from="1709176527868" duration="30000" />
+      <workItem from="1709176564971" duration="695000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

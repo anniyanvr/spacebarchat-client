@@ -1,18 +1,18 @@
+import SpacebarLogoBlue from "@assets/images/logo/Logo-Blue.svg?react";
+import Button from "@components/Button";
+import Container from "@components/Container";
+import { useAppStore } from "@hooks/useAppStore";
 import { observer } from "mobx-react-lite";
 import { Suspense } from "react";
 import PulseLoader from "react-spinners/PulseLoader";
 import styled from "styled-components";
-import { ReactComponent as SpacebarLogoBlue } from "../assets/images/logo/Logo-Blue.svg";
-import Button from "../components/Button";
-import Container from "../components/Container";
-import { useAppStore } from "../stores/AppStore";
 
 const Wrapper = styled.div`
 	justify-content: center;
 	align-items: center;
 	display: flex;
-	height: 100vh;
 	flex-direction: column;
+	flex: 1;
 `;
 
 const SpacebarLogo = styled(SpacebarLogoBlue)`
@@ -29,7 +29,11 @@ function LoadingPage() {
 	const app = useAppStore();
 
 	return (
-		<Container>
+		<Container
+			style={{
+				flex: 1,
+			}}
+		>
 			<Wrapper>
 				<SpacebarLogo />
 				<PulseLoader color="var(--text)" />
@@ -40,7 +44,7 @@ function LoadingPage() {
 							bottom: "30vh",
 						}}
 					>
-						<Button variant="danger" onClick={() => app.logout()}>
+						<Button palette="danger" onClick={() => app.logout()}>
 							Logout
 						</Button>
 					</div>

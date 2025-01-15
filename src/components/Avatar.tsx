@@ -1,69 +1,115 @@
+import Container from "@components/Container";
+import { useAppStore } from "@hooks/useAppStore";
+import { PresenceUpdateStatus } from "@spacebarchat/spacebar-api-types/v9";
+import { AccountStore } from "@stores";
+import { Presence, User } from "@structures";
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useRef } from "react";
 import styled from "styled-components";
-import { PopoutContext } from "../contexts/PopoutContext";
-import AccountStore from "../stores/AccountStore";
-import { useAppStore } from "../stores/AppStore";
-import User from "../stores/objects/User";
-import Container from "./Container";
-import UserProfilePopout from "./UserProfilePopout";
 
-const Wrapper = styled(Container)<{ size: number }>`
-	width: ${(props) => props.size}px;
-	height: ${(props) => props.size}px;
-	border-radius: 50%;
-	position: relative;
-
-	&:hover {
-		text-decoration: underline;
-		cursor: pointer;
-	}
+const Wrapper = styled(Container)<{ size: number; hasClick?: boolean }>`
+	background-color: transparent;
+	display: flex;
+	flex-direction: column;
+	user-select: none;
 `;
 
 interface Props {
 	user?: User | AccountStore;
-	size?: number;
+	size: 32 | 80;
 	style?: React.CSSProperties;
-	onClick?: () => void;
+	onClick?: React.MouseEventHandler<HTMLDivElement> | null;
 	popoutPlacement?: "left" | "right" | "top" | "bottom";
+	presence?: Presence;
+	statusDotStyle?: {
+		size?: number;
+		borderThickness?: number;
+	};
+	showPresence?: boolean;
+	isFloating?: boolean;
 }
 
 function Avatar(props: Props) {
 	const app = useAppStore();
 
-	const popoutContext = React.useContext(PopoutContext);
-	const ref = React.useRef<HTMLDivElement>(null);
+	const ref = useRef<HTMLDivElement>(null);
 
 	const user = props.user ?? app.account;
 	if (!user) return null;
 
-	const openPopout = () => {
-		if (!ref.current) return;
+	const presenceRingsTreatment = app.experiments.getTreatment("presence_rings");
+	const ringsEnabled = presenceRingsTreatment && presenceRingsTreatment.id === 2;
 
-		const rect = ref.current.getBoundingClientRect();
-		if (!rect) return;
-
-		popoutContext.open({
-			element: <UserProfilePopout user={user} />,
-			position: rect,
-			placement: props.popoutPlacement,
-		});
-	};
-
-	return (
-		<Wrapper
-			size={props.size ?? 32}
-			style={props.style}
-			onClick={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				props.onClick ? props.onClick() : openPopout();
-			}}
-			ref={ref}
-		>
-			<img src={user.avatarUrl} width={props.size ?? 32} height={props.size ?? 32} loading="eager" />
+	const children = (
+		<Wrapper size={props.size} style={props.style} ref={ref} hasClick={props.onClick !== null}>
+			{props.showPresence && props.presence ? (
+				!ringsEnabled ? (
+					<div
+						style={{
+							position: "relative",
+							display: "inline-block",
+							width: props.size,
+							height: props.size,
+						}}
+					>
+						<img
+							style={{
+								borderRadius: "50%",
+								width: props.size,
+								height: props.size,
+								objectFit: "cover",
+							}}
+							src={user.avatarUrl}
+							loading="eager"
+						/>
+						<div
+							style={{
+								position: "absolute",
+								width: props.statusDotStyle?.size ?? 14,
+								height: props.statusDotStyle?.size ?? 14,
+								backgroundColor: app.theme.getStatusColor(
+									props.presence?.status ?? PresenceUpdateStatus.Offline,
+								),
+								borderRadius: "50%",
+								bottom: 0,
+								right: 0,
+								border: `${
+									props.statusDotStyle?.borderThickness ?? 0.2
+								}rem solid var(--background-secondary)`,
+							}}
+						></div>
+					</div>
+				) : (
+					<img
+						width={props.size}
+						height={props.size}
+						style={{
+							borderRadius: "50%",
+							pointerEvents: "none",
+							border: `0.2rem solid ${app.theme.getStatusColor(
+								props.presence?.status ?? PresenceUpdateStatus.Offline,
+							)}`,
+						}}
+						src={user.avatarUrl}
+						loading="eager"
+					/>
+				)
+			) : (
+				<img
+					width={props.size}
+					height={props.size}
+					style={{
+						borderRadius: "50%",
+						pointerEvents: "none",
+					}}
+					src={user.avatarUrl}
+					loading="eager"
+				/>
+			)}
 		</Wrapper>
 	);
+
+	return children;
 }
 
 export default observer(Avatar);

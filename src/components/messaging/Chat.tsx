@@ -1,12 +1,11 @@
+import MemberList from "@components/MemberList/MemberList";
+import { useAppStore } from "@hooks/useAppStore";
+import useLogger from "@hooks/useLogger";
+import { Channel, Guild } from "@structures";
 import { runInAction } from "mobx";
 import { observer } from "mobx-react-lite";
-import React from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
-import useLogger from "../../hooks/useLogger";
-import { useAppStore } from "../../stores/AppStore";
-import Channel from "../../stores/objects/Channel";
-import Guild from "../../stores/objects/Guild";
-import MemberList from "../MemberList/MemberList";
 import ChatHeader from "./ChatHeader";
 import MessageInput from "./MessageInput";
 import MessageList from "./MessageList";
@@ -54,9 +53,16 @@ interface Props2 {
 }
 
 function ChatContent({ channel, guild }: Props2) {
+	const app = useAppStore();
+	const readstate = app.readStateStore.get(channel.id);
+
+	useEffect(() => {
+		channel.markAsRead();
+	}, [channel, guild]);
+
 	return (
 		<Container>
-			<MessageList guild={guild} channel={channel} />
+			<MessageList guild={guild} channel={channel} before={readstate?.lastMessageId} />
 			<MessageInput channel={channel} guild={guild} />
 			<TypingIndicator channel={channel} />
 		</Container>
@@ -80,24 +86,32 @@ const Content = observer((props: Props2) => {
 function Chat() {
 	const app = useAppStore();
 	const logger = useLogger("Messages");
+	const { activeChannel, activeGuild, activeChannelId, activeGuildId } = app;
 
 	React.useEffect(() => {
-		if (!app.activeChannel || !app.activeGuild || app.activeChannelId === "@me") return;
+		if (!activeChannel || !activeGuild || activeChannelId === "@me") return;
 
 		runInAction(() => {
-			app.gateway.onChannelOpen(app.activeGuildId!, app.activeChannelId!);
+			app.gateway.onChannelOpen(activeGuildId!, activeChannelId!);
 		});
-	}, [app.activeChannel, app.activeGuild]);
+	}, [activeChannel, activeGuild]);
 
-	if (app.activeGuildId && app.activeGuildId === "@me") {
+	if (activeGuildId && activeGuildId === "@me") {
 		return (
 			<WrapperTwo>
-				<span>Home Section Placeholder</span>
+				<span
+					style={{
+						padding: "1rem",
+						userSelect: "none",
+					}}
+				>
+					Home Section Placeholder
+				</span>
 			</WrapperTwo>
 		);
 	}
 
-	if (!app.activeGuild || !app.activeChannel) {
+	if (!activeGuild || !activeChannel) {
 		return (
 			<WrapperTwo>
 				<span
@@ -113,10 +127,26 @@ function Chat() {
 		);
 	}
 
+	if (!activeChannel.hasPermission("VIEW_CHANNEL")) {
+		return (
+			<WrapperTwo>
+				<span
+					style={{
+						color: "var(--text-secondary)",
+						fontSize: "1.5rem",
+						margin: "auto",
+					}}
+				>
+					You do not have permission to view this channel
+				</span>
+			</WrapperTwo>
+		);
+	}
+
 	return (
 		<WrapperTwo>
-			<ChatHeader channel={app.activeChannel} />
-			<Content channel={app.activeChannel} guild={app.activeGuild} />
+			<ChatHeader channel={activeChannel} />
+			<Content channel={activeChannel} guild={activeGuild} />
 		</WrapperTwo>
 	);
 }

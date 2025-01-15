@@ -1,37 +1,31 @@
+import ListSection from "@components/ListSection";
+import { useAppStore } from "@hooks/useAppStore";
+import { GuildMemberListStore } from "@stores";
 import { autorun } from "mobx";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import styled from "styled-components";
-import { useAppStore } from "../../stores/AppStore";
-import GuildMemberListStore from "../../stores/GuildMemberListStore";
-import ListSection from "../ListSection";
+import MemberListItem from "./MemberListItem";
 
 const Container = styled.div`
 	display: flex;
 	flex: 0 0 240px;
 	flex-direction: column;
 	background-color: var(--background-secondary);
-	height: 100%;
+	overflow-x: hidden;
 
 	@media (max-width: 1050px) {
 		display: none;
 	}
 `;
 
-const Wrapper = styled.aside`
-	justify-content: center;
-	min-width: 240px;
-	max-height: 100%;
-	display: flex;
-`;
-
 const List = styled.ul`
 	padding: 0;
 	margin: 0;
 	list-style: none;
-	overflow-y: auto;
-	height: 100%;
-	width: 100%;
+	// overflow-y: auto;
+	// height: 100%;
+	// width: 100%;
 `;
 
 function MemberList() {
@@ -61,9 +55,9 @@ function MemberList() {
 							<ListSection
 								key={i}
 								name={category.name}
-								items={
-									category.items.map((x) => x.nick ?? x.user?.username).filter((x) => x) as string[]
-								}
+								items={category.items.map((x) => (
+									<MemberListItem item={x} />
+								))}
 							/>
 					  ))
 					: null}

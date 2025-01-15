@@ -1,31 +1,33 @@
+import { bannerController } from "@/controllers/banners";
+import { getTauriVersion, getVersion } from "@tauri-apps/api/app";
+import { arch, locale, platform, version } from "@tauri-apps/plugin-os";
+import { useNetworkState } from "@uidotdev/usehooks";
+import { reaction } from "mobx";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import { Route, Routes, useNavigate } from "react-router-dom";
-import { AuthenticationGuard } from "./components/guards/AuthenticationGuard";
-import LoginPage from "./pages/LoginPage";
-import NotFoundPage from "./pages/NotFound";
-import RegistrationPage from "./pages/RegistrationPage";
-
-import { reaction } from "mobx";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Loader from "./components/Loader";
-import OfflineBanner from "./components/banners/OfflineBanner";
-import { UnauthenticatedGuard } from "./components/guards/UnauthenticatedGuard";
-import { BannerContext } from "./contexts/BannerContext";
 import useLogger from "./hooks/useLogger";
 import AppPage from "./pages/AppPage";
+import LoginPage from "./pages/LoginPage";
 import LogoutPage from "./pages/LogoutPage";
+import NotFoundPage from "./pages/NotFound";
+import RegistrationPage from "./pages/RegistrationPage";
 import ChannelPage from "./pages/subpages/ChannelPage";
-import { useAppStore } from "./stores/AppStore";
 import { Globals } from "./utils/Globals";
 // @ts-expect-error no types
 import FPSStats from "react-fps-stats";
+import AuthenticationGuard from "./components/AuthenticationGuard";
+import { useAppStore } from "./hooks/useAppStore";
+import InvitePage from "./pages/InvitePage";
+import { isTauri } from "./utils/Utils";
 
 function App() {
 	const app = useAppStore();
-	const bannerContext = React.useContext(BannerContext);
 	const logger = useLogger("App");
 	const navigate = useNavigate();
+	const networkState = useNetworkState();
 
 	React.useEffect(() => {
 		// Handles gateway connection/disconnection on token change
@@ -51,8 +53,24 @@ function App() {
 			},
 		);
 
+		const loadAsyncGlobals = async () => {
+			const [tauriVersion, appVersion, platformName, platformArch, platformVersion, platformLocale] =
+				await Promise.all([getTauriVersion(), getVersion(), platform(), arch(), version(), locale()]);
+			window.globals = {
+				tauriVersion: tauriVersion,
+				appVersion: appVersion,
+				platform: {
+					name: platformName,
+					arch: platformArch,
+					version: platformVersion,
+					locale: platformLocale,
+				},
+			};
+		};
+
+		if (isTauri) loadAsyncGlobals();
 		Globals.load();
-		app.loadToken();
+		app.loadSettings();
 
 		logger.debug("Loading complete");
 		app.setAppLoading(false);
@@ -61,13 +79,18 @@ function App() {
 	}, []);
 
 	React.useEffect(() => {
-		if (!app.isNetworkConnected)
-			bannerContext.setContent({
-				forced: true,
-				element: <OfflineBanner />,
-			});
-		else bannerContext.close();
-	}, [app.isNetworkConnected, bannerContext]);
+		if (!networkState.online) {
+			bannerController.push(
+				{
+					type: "offline",
+				},
+				"offline",
+			);
+		} else {
+			// only close if the current banner is the offline banner
+			bannerController.remove("offline");
+		}
+	}, [networkState]);
 
 	return (
 		<ErrorBoundary section="app">
@@ -80,9 +103,16 @@ function App() {
 						path="/channels/:guildId/:channelId?"
 						element={<AuthenticationGuard component={ChannelPage} />}
 					/>
-					<Route path="/login" element={<UnauthenticatedGuard component={LoginPage} />} />
-					<Route path="/register" element={<UnauthenticatedGuard component={RegistrationPage} />} />
+					<Route
+						path="/login"
+						element={<AuthenticationGuard requireUnauthenticated component={LoginPage} />}
+					/>
+					<Route
+						path="/register"
+						element={<AuthenticationGuard requireUnauthenticated component={RegistrationPage} />}
+					/>
 					<Route path="/logout" element={<AuthenticationGuard component={LogoutPage} />} />
+					<Route path="/invite/:code" element={<InvitePage />} />
 					<Route path="*" element={<NotFoundPage />} />
 				</Routes>
 			</Loader>

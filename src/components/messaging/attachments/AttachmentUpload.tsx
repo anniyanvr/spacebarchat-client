@@ -1,12 +1,10 @@
-import { useModals } from "@mattjennings/react-modal-stack";
+import { modalController } from "@/controllers/modals/ModalController";
+import Icon from "@components/Icon";
+import useLogger from "@hooks/useLogger";
+import { MAX_UPLOAD_SIZE, bytesToSize } from "@utils";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import styled from "styled-components";
-import useLogger from "../../../hooks/useLogger";
-import { bytesToSize } from "../../../utils/Utils";
-import { MAX_UPLOAD_SIZE } from "../../../utils/constants";
-import Icon from "../../Icon";
-import ErrorModal from "../../modals/ErrorModal";
 
 const Container = styled.button`
 	height: 45px;
@@ -64,16 +62,12 @@ interface Props {
 
 function AttachmentUpload({ append }: Props) {
 	const logger = useLogger("AttachmentUpload");
-	const { openModal } = useModals();
 
 	const fileTooLarge = () => {
-		openModal(ErrorModal, {
+		modalController.push({
+			type: "error",
 			title: "File Too Large",
-			message: (
-				<div style={{ justifyContent: "center", display: "flex" }}>
-					Max file size is {bytesToSize(MAX_UPLOAD_SIZE)}.
-				</div>
-			),
+			error: `Max file size is ${bytesToSize(MAX_UPLOAD_SIZE)}.`,
 		});
 		return;
 	};

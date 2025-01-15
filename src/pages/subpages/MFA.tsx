@@ -1,8 +1,4 @@
-import { Routes } from "@spacebarchat/spacebar-api-types/v9";
-import React from "react";
-import { useForm } from "react-hook-form";
-import { useNavigate } from "react-router-dom";
-import { ReactComponent as SpacebarLogoBlue } from "../../assets/images/logo/Logo-Blue.svg";
+import SpacebarLogoBlue from "@assets/images/logo/Logo-Blue.svg?react";
 import {
 	AuthContainer,
 	FormContainer,
@@ -18,17 +14,21 @@ import {
 	SubHeader,
 	SubmitButton,
 	Wrapper,
-} from "../../components/AuthComponents";
-import { TextDivider } from "../../components/Divider";
-import useLogger from "../../hooks/useLogger";
-import { useAppStore } from "../../stores/AppStore";
+} from "@components/AuthComponents";
+import { TextDivider } from "@components/Divider";
+import { useAppStore } from "@hooks/useAppStore";
+import useLogger from "@hooks/useLogger";
+import { Routes } from "@spacebarchat/spacebar-api-types/v9";
 import {
 	IAPIError,
 	IAPILoginResponseMFARequired,
 	IAPILoginResponseSuccess,
 	IAPITOTPRequest,
-} from "../../utils/interfaces/api";
-import { messageFromFieldError } from "../../utils/messageFromFieldError";
+	messageFromFieldError,
+} from "@utils";
+import React from "react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 
 type FormValues = {
 	code: string;
@@ -130,7 +130,7 @@ function MFA(props: Props) {
 							</InputWrapper>
 						</InputContainer>
 
-						<SubmitButton variant="primary" type="submit" disabled={loading}>
+						<SubmitButton palette="primary" type="submit" disabled={loading}>
 							Log In
 						</SubmitButton>
 

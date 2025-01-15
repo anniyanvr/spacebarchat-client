@@ -1,8 +1,8 @@
 import { Snowflake } from "@spacebarchat/spacebar-api-types/globals";
-import type { APIUser, PublicUser } from "@spacebarchat/spacebar-api-types/v9";
+import type { APIUser, GatewayUserUpdateDispatchData, PublicUser } from "@spacebarchat/spacebar-api-types/v9";
 import { CDNRoutes, DefaultUserAvatarAssets, ImageFormat } from "@spacebarchat/spacebar-api-types/v9";
-import { makeObservable, observable } from "mobx";
-import REST from "../../utils/REST";
+import { REST } from "@utils";
+import { action, makeAutoObservable, observable } from "mobx";
 
 export default class User {
 	id: Snowflake;
@@ -45,7 +45,12 @@ export default class User {
 		this.theme_colors = user.theme_colors;
 		this.accent_color = user.accent_color;
 
-		makeObservable(this);
+		makeAutoObservable(this);
+	}
+
+	@action
+	update(member: APIUser | GatewayUserUpdateDispatchData) {
+		Object.assign(this, member);
 	}
 
 	/**

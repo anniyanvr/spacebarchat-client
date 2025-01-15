@@ -1,8 +1,8 @@
+import { useAppStore } from "@hooks/useAppStore";
 import { ChannelType } from "@spacebarchat/spacebar-api-types/v9";
 import { observer } from "mobx-react-lite";
 import { AutoSizer, List, ListRowProps } from "react-virtualized";
 import styled from "styled-components";
-import { useAppStore } from "../../stores/AppStore";
 import ChannelListItem from "./ChannelListItem";
 
 const Container = styled.div`
@@ -10,14 +10,10 @@ const Container = styled.div`
 	flex: 1;
 `;
 
-export function EmptyChannelList() {
-	return <Container></Container>;
-}
-
 function ChannelList() {
 	const app = useAppStore();
 
-	if (!app.activeGuild || !app.activeChannel) return null;
+	if (!app.activeGuild || !app.activeChannel) return <Container />;
 	const { channels } = app.activeGuild;
 
 	const rowRenderer = ({ index, key, style }: ListRowProps) => {
@@ -25,6 +21,7 @@ function ChannelList() {
 
 		const active = app.activeChannelId === item.id;
 		const isCategory = item.type === ChannelType.GuildCategory;
+
 		return (
 			<div style={style}>
 				<ChannelListItem key={key} isCategory={isCategory} active={active} channel={item} />

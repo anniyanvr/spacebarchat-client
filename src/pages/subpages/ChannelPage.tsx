@@ -1,22 +1,20 @@
+import BannerRenderer from "@/controllers/banners/BannerRenderer";
+import ChannelSidebar from "@components/ChannelSidebar";
+import ContainerComponent from "@components/Container";
+import ErrorBoundary from "@components/ErrorBoundary";
+import GuildSidebar from "@components/GuildSidebar";
+import Chat from "@components/messaging/Chat";
+import SwipeableLayout from "@components/SwipeableLayout";
+import { useAppStore } from "@hooks/useAppStore";
 import { observer } from "mobx-react-lite";
 import React from "react";
+import { isMobile } from "react-device-detect";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import Banner from "../../components/Banner";
-import ChannelSidebar from "../../components/ChannelSidebar";
-import ContainerComponent from "../../components/Container";
-import ContextMenu from "../../components/ContextMenu";
-import ErrorBoundary from "../../components/ErrorBoundary";
-import GuildSidebar from "../../components/GuildSidebar";
-import PopoutRenderer from "../../components/PopoutRenderer";
-import Chat from "../../components/messaging/Chat";
-import { BannerContext } from "../../contexts/BannerContext";
-import { ContextMenuContext } from "../../contexts/ContextMenuContext";
-import { PopoutContext } from "../../contexts/PopoutContext";
-import { useAppStore } from "../../stores/AppStore";
 
 const Container = styled(ContainerComponent)`
 	display: flex;
+	flex: 1;
 	flex-direction: column;
 `;
 
@@ -27,11 +25,26 @@ const Wrapper = styled.div`
 	overflow: hidden;
 `;
 
+function LeftPanel() {
+	return (
+		<div
+			style={{
+				display: "flex",
+				flex: 1,
+			}}
+		>
+			<GuildSidebar />
+			<ChannelSidebar />
+		</div>
+	);
+}
+
+function RightPanel() {
+	return <div style={{ height: "100%", backgroundColor: "green", color: "white" }}>Right Panel</div>;
+}
+
 function ChannelPage() {
 	const app = useAppStore();
-	const contextMenuContext = React.useContext(ContextMenuContext);
-	const popoutContext = React.useContext(PopoutContext);
-	const bannerContext = React.useContext(BannerContext);
 
 	const { guildId, channelId } = useParams<{ guildId: string; channelId: string }>();
 
@@ -40,12 +53,23 @@ function ChannelPage() {
 		app.setActiveChannelId(channelId);
 	}, [guildId, channelId]);
 
+	if (isMobile) {
+		return (
+			<Container>
+				<BannerRenderer />
+				<SwipeableLayout leftChildren={<LeftPanel />} rightChildren={<RightPanel />}>
+					<ErrorBoundary section="component">
+						<Chat />
+					</ErrorBoundary>
+				</SwipeableLayout>
+			</Container>
+		);
+	}
+
 	return (
 		<Container>
-			<Banner />
+			<BannerRenderer />
 			<Wrapper>
-				{contextMenuContext.visible && <ContextMenu {...contextMenuContext} />}
-				{popoutContext.element && <PopoutRenderer {...popoutContext} />}
 				<GuildSidebar />
 				<ChannelSidebar />
 				<ErrorBoundary section="component">

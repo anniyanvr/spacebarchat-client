@@ -3,11 +3,8 @@
 // @fc-license-skip
 
 import { APIOverwrite } from "@spacebarchat/spacebar-api-types/v9";
+import { Channel, Guild, GuildMember, Role } from "@structures";
 import "missing-native-js-functions";
-import Channel from "../stores/objects/Channel";
-import Guild from "../stores/objects/Guild";
-import GuildMember from "../stores/objects/GuildMember";
-import Role from "../stores/objects/Role";
 import { BitField, BitFieldResolvable, BitFlag } from "./BitField";
 
 export type PermissionResolvable = bigint | number | Permissions | PermissionResolvable[] | PermissionString;

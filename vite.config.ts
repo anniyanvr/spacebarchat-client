@@ -1,7 +1,7 @@
 import replace from "@rollup/plugin-replace";
-import react from "@vitejs/plugin-react";
+// import react from "@vitejs/plugin-react";
+import react from "@vitejs/plugin-react-swc";
 import fs, { readFileSync } from "fs";
-import { internalIpV4 } from "internal-ip";
 import path, { resolve } from "path";
 import type { Plugin } from "vite";
 import { defineConfig } from "vite";
@@ -44,14 +44,43 @@ function getVersion() {
 	return JSON.parse(readFileSync("package.json").toString()).version;
 }
 
-const mobile = !!/android|ios/.exec(process.env.TAURI_PLATFORM);
+const PATH_ALIASES = {
+	"@": path.resolve(__dirname, "src"),
+	"@utils": path.resolve(__dirname, "src", "utils"),
+	"@components": path.resolve(__dirname, "src", "components"),
+	"@assets": path.resolve(__dirname, "src", "assets"),
+	"@modals": path.resolve(__dirname, "src", "modals"),
+	"@pages": path.resolve(__dirname, "src", "pages"),
+	"@stores": path.resolve(__dirname, "src", "stores"),
+	"@hooks": path.resolve(__dirname, "src", "hooks"),
+	"@contexts": path.resolve(__dirname, "src", "contexts"),
+	"@structures": path.resolve(__dirname, "src", "stores", "objects"),
+};
+
+const host = process.env.TAURI_DEV_HOST;
+const isDevBuild = !!process.env.VITE_ENV_DEV || !!process.env.TAURI_ENV_DEBUG;
+
+console.log(`Sourcemaps: ${isDevBuild}`);
+console.log(`Minification: ${isDevBuild ? false : "esbuild"}`);
+console.log(
+	`Target: ${
+		process.env.TAURI_ENV_PLATFORM !== undefined
+			? process.env.TAURI_ENV_PLATFORM == "windows"
+				? "chrome105"
+				: "safari13"
+			: "modules"
+	}`,
+);
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig({
+	resolve: {
+		alias: PATH_ALIASES,
+	},
 	plugins: [
 		cleanPlugin(),
 		reactVirtualized(),
-		react(),
+		react({ tsDecorators: true, plugins: [["@swc/plugin-styled-components", {}]] }),
 		svgr(),
 		chunkSplitPlugin({
 			strategy: "unbundle",
@@ -68,28 +97,39 @@ export default defineConfig(async () => ({
 
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//
-	// 1. prevent vite from obscuring rust errors
+	// prevent vite from obscuring rust errors
 	clearScreen: false,
-	// 2. tauri expects a fixed port, fail if that port is not available
 	server: {
-		host: mobile ? "0.0.0.0" : false,
+		// Tauri expects a fixed port, fail if that port is not available
+		host: host || false,
 		port: 1420,
-		hmr: mobile
+		hmr: host
 			? {
 					protocol: "ws",
-					host: await internalIpV4(),
-					port: 1421,
+					host: host,
+					port: 1430,
 			  }
 			: undefined,
+		// Tauri expects a fixed port, fail if that port is not available
 		strictPort: true,
 	},
 
-	// 3. to make use of `TAURI_DEBUG` and other env variables
-	// https://tauri.studio/v1/api/config#buildconfig.beforedevcommand
+	// Env variables starting with the item of `envPrefix` will be exposed in tauri's source code through `import.meta.env`.
+	// https://v2.tauri.app/reference/config/buildconfig.beforedevcommand
 	envPrefix: ["VITE_", "TAURI_"],
 	build: {
-		outDir: "build",
-		sourcemap: true,
+		outDir: "dist",
+		// produce sourcemaps for debug builds
+		sourcemap: isDevBuild,
+		// don't minify for debug builds
+		minify: isDevBuild ? false : "esbuild",
+		// Tauri uses Chromium on Windows and WebKit on macOS and Linux
+		target:
+			process.env.TAURI_ENV_PLATFORM !== undefined
+				? process.env.TAURI_ENV_PLATFORM == "windows"
+					? "chrome105"
+					: "safari13"
+				: "modules",
 		rollupOptions: {
 			input: {
 				main: resolve(__dirname, "index.html"),
@@ -101,7 +141,7 @@ export default defineConfig(async () => ({
 			},
 		},
 	},
-}));
+});
 
 const WRONG_CODE = `import { bpfrpt_proptype_WindowScroller } from "../WindowScroller.js";`;
 export function reactVirtualized(): Plugin {

@@ -1,8 +1,31 @@
 // adapted from Revite
 // https://github.com/revoltchat/revite/blob/master/src/components/common/messaging/embed/Embed.tsx
 
+import { modalController } from "@/controllers/modals";
+import Icon from "@components/Icon";
 import { APIEmbed, EmbedType } from "@spacebarchat/spacebar-api-types/v9";
 import styles from "./Embed.module.css";
+
+function getScaledDimensions(originalWidth: number, originalHeight: number, maxWidth: number, maxHeight: number) {
+	const aspectRatio = originalWidth / originalHeight;
+	let newWidth = originalWidth;
+	let newHeight = originalHeight;
+
+	if (newWidth > maxWidth) {
+		newWidth = maxWidth;
+		newHeight = newWidth / aspectRatio;
+	}
+
+	if (newHeight > maxHeight) {
+		newHeight = maxHeight;
+		newWidth = newHeight * aspectRatio;
+	}
+
+	return { width: Math.round(newWidth), height: Math.round(newHeight) };
+}
+function shouldScaleImage(originalWidth: number, originalHeight: number, maxWidth: number, maxHeight: number) {
+	return originalWidth > maxWidth || originalHeight > maxHeight;
+}
 
 interface Props {
 	embed: APIEmbed;
@@ -12,12 +35,49 @@ interface Props {
 }
 
 function EmbedMedia({ embed, width, height, thumbnail }: Props) {
+	let maxWidth = 400;
+	let maxHeight = 300;
+
+	if (!width || !height) {
+		if (embed.video) {
+			width = embed.video.width;
+			height = embed.video.height;
+		} else if (embed.image) {
+			width = embed.image.width;
+			height = embed.image.height;
+		} else if (embed.thumbnail) {
+			if (embed.type !== EmbedType.Image && embed.provider?.name !== "GitHub") {
+				maxWidth = 80;
+				maxHeight = 80;
+			}
+
+			width = embed.thumbnail.width;
+			height = embed.thumbnail.height;
+		} else {
+			console.log("No media size provided");
+			width = 400;
+			height = 300;
+		}
+	}
+
+	const originalWidth = width;
+	const originalHeight = height;
+
+	// Scale image if it's too large
+	if (shouldScaleImage(width!, height!, maxWidth, maxHeight)) {
+		const { width: newWidth, height: newHeight } = getScaledDimensions(width!, height!, maxWidth, maxHeight);
+		width = newWidth;
+		height = newHeight;
+	}
+
+	// console.log(`Original size: ${originalWidth}x${originalHeight} - Scaled size: ${width}x${height}`);
+
 	switch (embed.provider?.name) {
 		case "YouTube": {
 			if (!embed.video?.url) return null;
 			const url = embed.video.url;
 
-			return <iframe loading="lazy" src={url} allowFullScreen style={{ height }} />;
+			return <iframe loading="lazy" src={url} allowFullScreen style={{ height, width }} />;
 		}
 		case "Spotify": {
 			const url = embed.url;
@@ -30,7 +90,7 @@ function EmbedMedia({ embed, width, height, thumbnail }: Props) {
 
 			return (
 				<iframe
-					style={{ borderRadius: "12px", width: "400px", height: "80px" }}
+					style={{ width: "400px", height: "80px", borderRadius: 12 }}
 					src={`https://open.spotify.com/embed/${type}/${id}`}
 					frameBorder="0"
 					allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
@@ -92,15 +152,31 @@ function EmbedMedia({ embed, width, height, thumbnail }: Props) {
 				const url = embed.video.url;
 
 				return (
-					<video
-						className={styles.embedImage}
-						style={{ width, height }}
-						src={url}
-						loop={embed.type === EmbedType.GIFV}
-						controls={embed.type === EmbedType.GIFV}
-						autoPlay={embed.type === EmbedType.GIFV}
-						muted={embed.type === EmbedType.GIFV ? true : undefined}
-					/>
+					<div>
+						<video
+							className={styles.embedImage}
+							style={{ width, height }}
+							src={url}
+							loop={embed.type === EmbedType.GIFV}
+							controls={embed.type !== EmbedType.GIFV}
+							autoPlay={embed.type === EmbedType.GIFV}
+							muted={embed.type === EmbedType.GIFV ? true : undefined}
+							onClick={() => {
+								modalController.push({
+									type: "image_viewer",
+									attachment: embed.video!,
+									isVideo: true,
+								});
+							}}
+						/>
+
+						{embed.type === EmbedType.GIFV && (
+							<div>
+								<div className={styles.embedGifIconBg}></div>
+								<Icon icon="mdiFileGifBox" size={1} className={styles.embedGifIcon} />
+							</div>
+						)}
+					</div>
 				);
 			} else if (embed.image && !thumbnail) {
 				const url = embed.image.url;
@@ -110,11 +186,12 @@ function EmbedMedia({ embed, width, height, thumbnail }: Props) {
 						className={styles.embedImage}
 						src={url}
 						loading="lazy"
-						style={{ width: "100%", height: "100%" }}
 						onClick={() => {
-							console.log("preview image");
+							modalController.push({
+								type: "image_viewer",
+								attachment: embed.image!,
+							});
 						}}
-						onMouseDown={(ev) => ev.button === 1 && window.open(url, "_blank")}
 					/>
 				);
 			} else if (embed.thumbnail) {
@@ -125,11 +202,13 @@ function EmbedMedia({ embed, width, height, thumbnail }: Props) {
 						className={thumbnail ? styles.embedThumbnail : styles.embedImage}
 						src={url}
 						loading="lazy"
-						style={{ width, height }}
+						style={{ height, width }}
 						onClick={() => {
-							console.log("preview image");
+							modalController.push({
+								type: "image_viewer",
+								attachment: embed.thumbnail!,
+							});
 						}}
-						onMouseDown={(ev) => ev.button === 1 && window.open(url, "_blank")}
 					/>
 				);
 			}

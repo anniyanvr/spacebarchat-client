@@ -3,7 +3,6 @@ import type {
 	APIChannel,
 	APIInvite,
 	APIOverwrite,
-	APIReadState,
 	APIUser,
 	APIWebhook,
 	GatewayVoiceState,
@@ -14,14 +13,11 @@ import type {
 	Snowflake as SnowflakeType,
 } from "@spacebarchat/spacebar-api-types/v9";
 import { ChannelType, Routes } from "@spacebarchat/spacebar-api-types/v9";
-import { ObservableMap, action, computed, makeObservable, observable } from "mobx";
+import { AppStore, MessageStore } from "@stores";
+import { APIError, PermissionResolvable, Permissions } from "@utils";
+import Logger from "@utils/Logger";
+import { ObservableMap, action, computed, makeAutoObservable, observable } from "mobx";
 import murmur from "murmurhash-js/murmurhash3_gc";
-import Logger from "../../utils/Logger";
-import type { PermissionResolvable } from "../../utils/Permissions";
-import { Permissions } from "../../utils/Permissions";
-import { APIError } from "../../utils/interfaces/api";
-import AppStore from "../AppStore";
-import MessageStore from "../MessageStore";
 import QueuedMessage from "./QueuedMessage";
 import User from "./User";
 
@@ -53,7 +49,7 @@ export default class Channel {
 	@observable retentionPolicyId?: string;
 	@observable messages: MessageStore;
 	@observable voiceStates?: GatewayVoiceState[];
-	@observable readStates?: APIReadState[];
+	// @observable readStates?: APIReadState[]; ????? this seems wrong
 	@observable webhooks?: APIWebhook[];
 	@observable flags: number;
 	@observable defaultThreadRateLimitPerUser: number;
@@ -89,7 +85,7 @@ export default class Channel {
 		this.invites = channel.invites;
 		this.retentionPolicyId = channel.retention_policy_id;
 		this.voiceStates = channel.voice_states;
-		this.readStates = channel.read_states;
+		// this.readStates = channel.read_states;
 		this.webhooks = channel.webhooks;
 		this.flags = channel.flags;
 		this.defaultThreadRateLimitPerUser = channel.default_thread_rate_limit_per_user;
@@ -143,7 +139,7 @@ export default class Channel {
 				break;
 		}
 
-		makeObservable(this);
+		makeAutoObservable(this);
 	}
 
 	@action
@@ -177,7 +173,8 @@ export default class Channel {
 				opts = { ...opts, around };
 			}
 
-			this.logger.info(`Fetching initial messages for ${this.id}`);
+			if (isInitial) this.logger.info(`Fetching initial messages for ${this.id}`);
+			else this.logger.info(`Fetching messages for ${this.id} before ${before}`);
 			app.rest
 				.get<RESTGetAPIChannelMessagesResult | APIError>(Routes.channelMessages(this.id), opts)
 				.then((res) => {
@@ -210,6 +207,7 @@ export default class Channel {
 				Routes.channelMessages(this.id),
 				data,
 				undefined,
+				undefined,
 				msg,
 			);
 		return this.app.rest.post<RESTPostAPIChannelMessageJSONBody, RESTPostAPIChannelMessageResult>(
@@ -233,6 +231,22 @@ export default class Channel {
 			this.type === ChannelType.PublicThread ||
 			this.type === ChannelType.GroupDM ||
 			this.type === ChannelType.DM
+		);
+	}
+
+	@computed
+	get isGuildTextChannel() {
+		return (
+			this.type === ChannelType.GuildText ||
+			this.type === ChannelType.GuildVoice ||
+			this.type === ChannelType.GuildStageVoice ||
+			this.type === ChannelType.GuildForum ||
+			this.type === ChannelType.GuildAnnouncement ||
+			this.type === ChannelType.AnnouncementThread ||
+			this.type === ChannelType.Encrypted ||
+			this.type === ChannelType.EncryptedThread ||
+			this.type === ChannelType.PrivateThread ||
+			this.type === ChannelType.PublicThread
 		);
 	}
 
@@ -292,5 +306,41 @@ export default class Channel {
 		}
 
 		return listId;
+	}
+
+	@computed
+	get hasUnread() {
+		const { readstates } = this.app.readStateStore;
+		const readState = readstates.get(this.id);
+
+		if (!readState) {
+			// this.logger.warn(`Failed to find readstate for channel ${this.id}`); // this just causes unnecessary spam
+			return false;
+		}
+
+		return readState.lastMessageId !== this.lastMessageId;
+	}
+
+	markAsRead() {
+		const readState = this.app.readStateStore.get(this.id);
+		if (!readState) {
+			// this.logger.warn(`Failed to find readstate for channel ${this.id}`); // this just causes unnecessary spam
+			return;
+		}
+		if (!this.lastMessageId) {
+			this.logger.warn(`No last message for channel ${this.id}`);
+			return;
+		}
+
+		this.app.rest
+			.post(Routes.channelMessage(this.id, this.lastMessageId) + "/ack", {
+				mention_count: readState.mentionCount,
+			})
+			.then((r) => {
+				this.logger.debug(`Acked ${this.lastMessageId} for channel ${this.id}`, r);
+			})
+			.catch((e) => {
+				this.logger.error(`Failed to ack ${this.lastMessageId} for channel ${this.id}`, e);
+			});
 	}
 }

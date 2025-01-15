@@ -19,8 +19,10 @@ import {
 	type MessageFlags,
 	type Snowflake,
 } from "@spacebarchat/spacebar-api-types/v9";
+import { AppStore } from "@stores";
+import { extractInvites } from "@utils";
 import { action, makeObservable, observable } from "mobx";
-import AppStore from "../AppStore";
+import Channel from "./Channel";
 import MessageBase from "./MessageBase";
 import QueuedMessage, { QueuedMessageData } from "./QueuedMessage";
 
@@ -31,7 +33,8 @@ export default class Message extends MessageBase {
 	/**
 	 * ID of the channel the message was sent in
 	 */
-	channel_id: Snowflake;
+	// channel_id: Snowflake;
+	channel: Channel;
 	/**
 	 * When this message was edited (or null if never)
 	 */
@@ -200,12 +203,14 @@ export default class Message extends MessageBase {
 	 */
 	position?: number;
 	guild_id?: Snowflake;
+	invites: string[];
 
 	constructor(app: AppStore, data: APIMessage & { guild_id?: Snowflake }) {
 		super(app, data);
 
 		this.id = data.id;
-		this.channel_id = data.channel_id;
+		// this.channel_id = data.channel_id;
+		this.channel = this.app.channels.get(data.channel_id)!;
 		// this.member = message.member ? new GuildMember(message.member) : undefined;
 		this.content = data.content;
 		this.timestamp = new Date(data.timestamp);
@@ -213,7 +218,7 @@ export default class Message extends MessageBase {
 		this.tts = data.tts;
 		this.mention_everyone = data.mention_everyone;
 		this.mentions = data.mentions; // TODO: user object?
-		this.mention_roles = data.mention_roles;
+		this.mention_roles = (data.mention_roles as unknown as { id: Snowflake }[]).map((x) => x.id); // FIXME: oh god, who did this in the server smh
 		this.mention_channels = data.mention_channels;
 		this.attachments = data.attachments;
 		this.embeds = data.embeds;
@@ -237,6 +242,7 @@ export default class Message extends MessageBase {
 		if (data.guild_id) {
 			this.guild_id = data.guild_id;
 		}
+		this.invites = extractInvites(data.content);
 
 		makeObservable(this);
 	}
@@ -250,6 +256,6 @@ export default class Message extends MessageBase {
 	}
 
 	async delete() {
-		await this.app.rest.delete(Routes.channelMessage(this.channel_id, this.id));
+		await this.app.rest.delete(Routes.channelMessage(this.channel.id, this.id));
 	}
 }
